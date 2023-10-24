@@ -8,13 +8,24 @@ def clean_zipcode(zipcode)
   zipcode.to_s.rjust(5, '0')[0..4]
 end
 
+def clean_phone(phone)
+  phone = phone.gsub(/[^0-9]+/, '')
+  if phone.length == 10
+    phone
+  elsif (phone.length == 11) && phone.start_with?('1')
+    phone[1..10]
+  else
+    'Wrong number!'
+  end
+end
+
 # rubocop:disable Metrics/MethodLength
 def legislators_by_zipcode(zipcode)
   civic_info = Google::Apis::CivicinfoV2::CivicInfoService.new
   civic_info.key = 'AIzaSyClRzDqDh5MsXwnCWi0kOiiBivP6JsSyBw'
 
   begin
-    legislators = civic_info.representative_info_by_address(
+    civic_info.representative_info_by_address(
       address: zipcode,
       levels: 'country',
       roles: %w[legislatorUpperBody legislatorLowerBody]
