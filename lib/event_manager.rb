@@ -19,7 +19,28 @@ def clean_phone(phone)
   end
 end
 
-# rubocop:disable Metrics/MethodLength
+def get_hour(date)
+  Time.strptime(date, '%m/%d/%y %H:%S').hour
+end
+
+def get_weekday(date)
+  time = Time.strptime(date, '%m/%d/%y %H:%S')
+  time.strftime('%A')
+end
+
+def calculate_frequencies(data)
+  result = data.each_with_object(Hash.new(0)) do |number, total|
+    total[number] += 1
+  end
+  result.sort_by { |_key, value| -value }
+end
+
+def display_top_values(data)
+  5.times do |i|
+    puts "#{data[i].first}: #{data[i].last}"
+  end
+end
+
 def legislators_by_zipcode(zipcode)
   civic_info = Google::Apis::CivicinfoV2::CivicInfoService.new
   civic_info.key = 'AIzaSyClRzDqDh5MsXwnCWi0kOiiBivP6JsSyBw'
@@ -62,3 +83,22 @@ contents.each do |row|
 
   save_thank_you_letter(id, form_letter)
 end
+
+contents = CSV.open('event_attendees_full.csv',
+                    headers: true,
+                    header_converters: :symbol)
+
+dates = contents.map do |row|
+  row[:regdate]
+end
+
+hours = dates.map { |date| get_hour(date) }
+weekdays = dates.map { |date| get_weekday(date) }
+
+puts 'The top registration hours are:'
+hour_frequencies = calculate_frequencies(hours)
+display_top_values(hour_frequencies)
+
+puts 'The top registration weekdays are'
+weekday_frequencies = calculate_frequencies(weekdays)
+display_top_values(weekday_frequencies)
